@@ -1,0 +1,283 @@
+{
+  "info": {
+    "name": "Find It Campus API",
+    "description": "Postman collection for the Find It Campus Lost & Found backend. Set the base_url and token variables under the collection's Variables tab (token is filled in automatically after Login/Register if you use the provided test scripts).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "item_id", "value": "" },
+    { "key": "claim_id", "value": "" },
+    { "key": "user_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"email\": \"jane@college.edu\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.collectionVariables.set('token', data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@college.edu\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json().data;",
+                  "  pm.collectionVariables.set('token', data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "Create Lost Item (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Black Wallet", "type": "text" },
+                { "key": "category", "value": "Accessories", "type": "text" },
+                { "key": "description", "value": "Leather wallet with student ID inside", "type": "text" },
+                { "key": "location", "value": "Library, 2nd floor", "type": "text" },
+                { "key": "date", "value": "2026-09-20", "type": "text" },
+                { "key": "type", "value": "lost", "type": "text" },
+                { "key": "additionalDetails", "value": "Has a small keychain attached", "type": "text" },
+                { "key": "image", "type": "file", "src": "" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/items", "host": ["{{base_url}}"], "path": ["items"] }
+          }
+        },
+        {
+          "name": "Create Found Item (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Blue Umbrella", "type": "text" },
+                { "key": "category", "value": "Other", "type": "text" },
+                { "key": "description", "value": "Found near the main gate", "type": "text" },
+                { "key": "location", "value": "Main Gate", "type": "text" },
+                { "key": "date", "value": "2026-09-20", "type": "text" },
+                { "key": "type", "value": "found", "type": "text" },
+                { "key": "image", "type": "file", "src": "" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/items", "host": ["{{base_url}}"], "path": ["items"] }
+          }
+        },
+        {
+          "name": "Search Items",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/items?search=wallet&type=lost&category=Accessories&location=library",
+              "host": ["{{base_url}}"],
+              "path": ["items"],
+              "query": [
+                { "key": "search", "value": "wallet" },
+                { "key": "type", "value": "lost" },
+                { "key": "category", "value": "Accessories" },
+                { "key": "location", "value": "library" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Reports",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/items/my", "host": ["{{base_url}}"], "path": ["items", "my"] }
+          }
+        },
+        {
+          "name": "Get Item By ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/items/{{item_id}}", "host": ["{{base_url}}"], "path": ["items", "{{item_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/items/{{item_id}}", "host": ["{{base_url}}"], "path": ["items", "{{item_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Claims",
+      "item": [
+        {
+          "name": "Create Claim",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{item_id}}\",\n  \"message\": \"This is my wallet, it has my student ID and a photo of my dog inside.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/claims", "host": ["{{base_url}}"], "path": ["claims"] }
+          }
+        },
+        {
+          "name": "Get My Claims",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/claims/my", "host": ["{{base_url}}"], "path": ["claims", "my"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/dashboard", "host": ["{{base_url}}"], "path": ["admin", "dashboard"] }
+          }
+        },
+        {
+          "name": "Get Pending Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/items/pending", "host": ["{{base_url}}"], "path": ["admin", "items", "pending"] }
+          }
+        },
+        {
+          "name": "Approve Item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/items/{{item_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "items", "{{item_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Insufficient detail provided\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/admin/items/{{item_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "items", "{{item_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Get All Claims",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/claims", "host": ["{{base_url}}"], "path": ["admin", "claims"] }
+          }
+        },
+        {
+          "name": "Approve Claim",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/claims/{{claim_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "claims", "{{claim_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Claim",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/claims/{{claim_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "claims", "{{claim_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/users", "host": ["{{base_url}}"], "path": ["admin", "users"] }
+          }
+        }
+      ]
+    }
+  ]
+}
