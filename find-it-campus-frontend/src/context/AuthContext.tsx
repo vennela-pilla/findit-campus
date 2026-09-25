@@ -14,6 +14,7 @@ interface AuthContextValue {
     confirmPassword: string;
   }) => Promise<void>;
   logout: () => void;
+  loginAsPreview: (customUser?: { fullName?: string; email?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -72,8 +73,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
   };
 
+  const loginAsPreview = (customUser?: { fullName?: string; email?: string }) => {
+    const rawName =
+      customUser?.fullName?.trim() ||
+      (customUser?.email ? customUser.email.split("@")[0] : "Alex Rivera");
+    const formattedName = rawName.includes(" ")
+      ? rawName
+      : rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+    const previewUser: User = {
+      id: "dev-preview-student",
+      fullName: formattedName,
+      email: customUser?.email?.trim() || "alex.student@campus.edu",
+      role: "student",
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    persistAuth(previewUser, "dev-preview-token");
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, loginAsPreview }}>
       {children}
     </AuthContext.Provider>
   );

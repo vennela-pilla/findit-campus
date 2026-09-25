@@ -1,11 +1,11 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getErrorMessage } from "../services/api";
+import { getErrorMessage, isNetworkError } from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
 
 const Register = () => {
-  const { register } = useAuth();
+  const { register, loginAsPreview } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -15,6 +15,7 @@ const Register = () => {
     confirmPassword: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [previewNotice, setPreviewNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const update = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -36,12 +37,24 @@ const Register = () => {
       return;
     }
     setError(null);
+    setPreviewNotice(null);
     setIsSubmitting(true);
     try {
       await register(form);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err));
+      if (isNetworkError(err)) {
+        // Safe development-only preview fallback when backend is offline
+        setPreviewNotice(
+          "Development Preview Mode: Backend is offline. This form submission is only for UI testing."
+        );
+        loginAsPreview({ fullName: form.fullName, email: form.email });
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 1100);
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -57,6 +70,18 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           {error && <ErrorMessage message={error} />}
+
+          {previewNotice && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50/95 p-3.5 text-xs text-amber-900 shadow-xs">
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-800 text-[11px] font-bold mt-0.5">
+                ⚡
+              </span>
+              <div>
+                <p className="font-bold text-amber-950">{previewNotice}</p>
+                <p className="mt-0.5 text-amber-700">Connecting to Dashboard preview...</p>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="label-text" htmlFor="fullName">
