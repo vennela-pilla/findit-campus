@@ -37,3 +37,12 @@ export const getErrorMessage = (error: unknown): string => {
   }
   return "Something went wrong";
 };
+
+// Detect if an error is due to the backend being completely offline / unreachable
+export const isNetworkError = (error: unknown): boolean => {
+  if (axios.isAxiosError(error)) {
+    return !error.response || error.code === "ERR_NETWORK" || error.message === "Network Error";
+  }
+  return false;
+};
+
